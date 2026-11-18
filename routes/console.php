@@ -7,3 +7,4 @@ Schedule::command('portal:close-finished')->everyFiveMinutes()->withoutOverlappi
 Schedule::command('portal:session-reminders')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('portal:purge-uploads')->hourly();
 Schedule::command('portal:purge-deleted-files')->dailyAt('03:00')->withoutOverlapping();
+Schedule::command('sanctum:prune-expired --hours=24')->dailyAt('03:30'); // sign-in tokens of a separately hosted frontend

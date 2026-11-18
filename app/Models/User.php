@@ -8,11 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     public const DEFAULT_PREFERENCES = [
         'locale' => 'ar',
@@ -48,6 +49,15 @@ class User extends Authenticatable
     public function preference(string $key): mixed
     {
         return ($this->preferences ?? [])[$key] ?? self::DEFAULT_PREFERENCES[$key] ?? null;
+    }
+
+    /**
+     * A sign-in token for a frontend hosted on another address than the API (where browser cookies would be
+     * third-party and often blocked). "Remember me" keeps it for 30 days, otherwise for one day.
+     */
+    public function issueToken(bool $remember = false): string
+    {
+        return $this->createToken('portal', ['*'], now()->addDays($remember ? 30 : 1))->plainTextToken;
     }
 
     /** SVU usernames are the part of the university e-mail before the @ (t_name); a number is added if taken. */

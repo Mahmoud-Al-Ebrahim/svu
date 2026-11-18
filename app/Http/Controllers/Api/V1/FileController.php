@@ -136,14 +136,15 @@ class FileController extends Controller
     }
 
     /** Redirects to a short-lived signed URL; the file itself is never in the public web root. */
-    public function download(Request $request, CourseFile $file): RedirectResponse
+    public function download(Request $request, CourseFile $file): RedirectResponse|JsonResponse
     {
         $this->authorizeFile($request, $file);
         $file->increment('download_count');
+        $url = URL::temporarySignedRoute('files.raw', now()->addMinutes(config('portal.download_url_minutes')), ['file' => $file->id]);
 
-        return redirect()->away(URL::temporarySignedRoute(
-            'files.raw', now()->addMinutes(config('portal.download_url_minutes')), ['file' => $file->id],
-        ));
+        // A frontend on another address asks for the link as JSON (it signs in with a header, which a plain
+        // link click can't send) and then opens it; the signature is all the raw route needs.
+        return $request->wantsJson() ? response()->json(['url' => $url, 'downloads' => $file->download_count]) : redirect()->away($url);
     }
 
     /** Target of the signed URL: streams the file under its original name. The signature is the authorization. */

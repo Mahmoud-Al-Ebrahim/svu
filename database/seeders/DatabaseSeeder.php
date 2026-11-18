@@ -27,7 +27,8 @@ use Illuminate\Support\Str;
 
 /**
  * Development data mirroring faculty-portal/src/data/mock.ts. Dates are relative to "now".
- * Every seeded account uses the test password `Password1` (see backend/README.md).
+ * Every seeded account uses the password in SEED_PASSWORD (`Password1` by default, see backend/README.md).
+ * On a live server (APP_ENV=production) it refuses that public default: set SEED_PASSWORD in .env first.
  */
 class DatabaseSeeder extends Seeder
 {
@@ -35,31 +36,35 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $password = config('portal.seed_password');
+        if (app()->isProduction() && ($password === 'Password1' || strlen((string) $password) < 10)) {
+            throw new \RuntimeException('Set SEED_PASSWORD in .env to a strong password (10+ characters) before seeding a live server.');
+        }
         $tz = config('portal.timezone');
         $at = fn (int $days, int $h = 9, int $m = 0) => Carbon::now($tz)->addDays($days)->setTime($h, $m)->utc();
         $day = fn (int $days) => Carbon::now($tz)->addDays($days)->toDateString();
 
         // ---- People ----
         $samer = User::create([
-            'username' => 't_samer', 'email' => 't_samer@svuonline.org', 'employee_id' => 'T-20418', 'password' => 'Password1',
+            'username' => 't_samer', 'email' => 't_samer@svuonline.org', 'employee_id' => 'T-20418', 'password' => $password,
             'name_ar' => 'د. سامر الحلبي', 'name_en' => 'Dr. Samer Al-Halabi', 'rank_ar' => 'أستاذ مساعد', 'rank_en' => 'Assistant Professor',
             'phone' => '+963 944 000 000', 'role' => Role::Tutor, 'last_login_at' => $at(-1, 13, 54), 'last_login_ip' => '10.1.19.250',
             'previous_login_at' => $at(-3, 9, 12), 'previous_login_ip' => '10.1.19.250',
         ]);
         $mona = User::create([
-            'username' => 't_mona', 'email' => 't_mona@svuonline.org', 'employee_id' => 'T-20533', 'password' => 'Password1',
+            'username' => 't_mona', 'email' => 't_mona@svuonline.org', 'employee_id' => 'T-20533', 'password' => $password,
             'name_ar' => 'م. منى نصر', 'name_en' => 'Eng. Mona Nasr', 'rank_ar' => 'مهندس مشرف', 'rank_en' => 'Supervising Engineer', 'role' => Role::Tutor,
         ]);
         $bitManager = User::create([
-            'username' => 'm_bit', 'email' => 'bit.program@svuonline.org', 'employee_id' => 'M-1001', 'password' => 'Password1',
+            'username' => 'm_bit', 'email' => 'bit.program@svuonline.org', 'employee_id' => 'M-1001', 'password' => $password,
             'name_ar' => 'مدير برنامج BIT', 'name_en' => 'BIT Program Manager', 'role' => Role::ProgramManager,
         ]);
         $mwsManager = User::create([
-            'username' => 'm_mws', 'email' => 'mws.program@svuonline.org', 'employee_id' => 'M-1002', 'password' => 'Password1',
+            'username' => 'm_mws', 'email' => 'mws.program@svuonline.org', 'employee_id' => 'M-1002', 'password' => $password,
             'name_ar' => 'مدير برنامج MWS', 'name_en' => 'MWS Program Manager', 'role' => Role::ProgramManager,
         ]);
         User::create([
-            'username' => 'admin', 'email' => 'portal.admin@svuonline.org', 'employee_id' => 'A-0001', 'password' => 'Password1',
+            'username' => 'admin', 'email' => 'portal.admin@svuonline.org', 'employee_id' => 'A-0001', 'password' => $password,
             'name_ar' => 'مدير النظام', 'name_en' => 'System administrator', 'role' => Role::Admin,
         ]);
 

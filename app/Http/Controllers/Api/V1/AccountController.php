@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /** Public sign-up (or account requests), and the signed-in user's own profile. */
 class AccountController extends Controller
@@ -89,12 +90,14 @@ class AccountController extends Controller
             return $user;
         });
 
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
+        if ($request->hasSession()) { // same address as the API: also a session cookie
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+        }
         $user->forceFill(['last_login_at' => now(), 'last_login_ip' => $request->ip()])->save();
         Audit::log('account.signed_up', $user);
 
-        return response()->json(['user' => new UserResource($user)], 201);
+        return response()->json(['user' => new UserResource($user), 'token' => $request->hasSession() ? null : $user->issueToken()], 201);
     }
 
     public function update(Request $request): UserResource
@@ -123,7 +126,12 @@ class AccountController extends Controller
         }
         $request->user()->update(['password' => $data['password']]);
         // Keep this browser signed in; sign out every other device.
-        Sessions::signOutEverywhere($request->user(), except: $request->session()->getId());
+        $token = $request->user()->currentAccessToken();
+        Sessions::signOutEverywhere(
+            $request->user(),
+            except: $request->hasSession() ? $request->session()->getId() : null,
+            exceptToken: $token instanceof PersonalAccessToken ? $token->id : null,
+        );
         Audit::log('auth.password_changed', $request->user());
 
         return response()->json(null, 204);

@@ -42,6 +42,9 @@ return [
 
     'download_url_minutes' => 5,
 
+    // Password of the demo accounts the seeder creates (t_samer, m_bit, admin…). Never the default on a live server.
+    'seed_password' => env('SEED_PASSWORD', 'Password1'),
+
     'files' => [
         // true: files for "all classes" of a course are seen by every tutor of that course (SVU's normal rule).
         // false (the default during the doctors' trial): only by the tutor who uploaded them, so each doctor's
