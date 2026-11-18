@@ -5,7 +5,7 @@ Laravel 12 + MySQL/MariaDB backend for the six tutor features in `../faculty-por
 
 ## Run it locally (XAMPP)
 
-Requirements: PHP 8.2+, Composer, MySQL 8 or MariaDB 10.4+ (XAMPP's works). 
+Requirements: PHP 8.2+, Composer, MySQL 8 or MariaDB 10.4+ (XAMPP's works).
 
 ```bash
 composer install
